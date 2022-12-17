@@ -202,8 +202,9 @@ Table 5. Model Accuracy Using Different Cutoff Values
 #Table 5. Model Accuracy Using Different Cutoff Values
 print(data.frame(cutoff, accuracy))
 ```
-Table 6. Model Performance
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Table 6. Model Performance 
 y_hat_glm <-factor(ifelse(p_hat_glm > 0.4, "Yes", "No"))
 confusionMatrix(y_hat_glm, test_set$hpv_vaccine)$overall["Accuracy"]
 sensitivity(data = y_hat_glm, reference = test_set$hpv_vaccine)
@@ -215,6 +216,14 @@ confusionMatrix(y_hat_glm_2, test_set$hpv_vaccine)$overall["Accuracy"]
 sensitivity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 specificity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 table(predicted = y_hat_glm_2, actual = test_set$hpv_vaccine)
+```
+Table 6. Detailed Model Performances 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cutoff_df <- c(0.3, 0.4)
+accuracy_df <- c(0.7600657, 0.7806081)
+sensitivity_df <-c(0.9526316, 1)
+specificity_df <-c(0.07490637, 0)
+print(data.frame(cutoff_df, accuracy_df, sensitivity_df,specificity_df))
 ```
 
 All Code for this project: 
@@ -364,7 +373,8 @@ best_cutoff
 
 #Table 5. Model Accuracy of Different Cutoff Values
 print(data.frame(cutoff, accuracy))
-
+```
+```{r message=FALSE, warning=FALSE, include=FALSE}
 #Table 6. Model Performance 
 y_hat_glm <-factor(ifelse(p_hat_glm > 0.4, "Yes", "No"))
 confusionMatrix(y_hat_glm, test_set$hpv_vaccine)$overall["Accuracy"]
@@ -377,8 +387,13 @@ confusionMatrix(y_hat_glm_2, test_set$hpv_vaccine)$overall["Accuracy"]
 sensitivity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 specificity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 table(predicted = y_hat_glm_2, actual = test_set$hpv_vaccine)
-```
 
+cutoff_df <- c(0.3, 0.4)
+accuracy_df <- c(0.7600657, 0.7806081)
+sensitivity_df <-c(0.9526316, 1)
+specificity_df <-c(0.07490637, 0)
+print(data.frame(cutoff_df, accuracy_df, sensitivity_df,specificity_df))
+```
 
 
 

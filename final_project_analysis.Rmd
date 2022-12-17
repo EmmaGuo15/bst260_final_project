@@ -13,6 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 #Import data from Stata
 library(haven)
 hpv <- read_dta("UGPR7BFL.DTA")
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggridges)
+library(boot)
+library(table1)
+library(ggcorrplot)
+library(caret)
 
 #Codebook
 table(hpv$sh22) #hpv vaccine 
@@ -29,14 +37,12 @@ table(hpv$hv270) #wealth index factor
 
 ```{r Data Cleaning}
 #subset data to contain only girls aged 10-14, with availiable HPV vaccine status
-library(tidyverse)
 hpv_girl_10_14 <- hpv |> 
   filter(hv105 >= 10 & hv105 <=14 & hv104 ==2) |> #6528 left
   filter(sh22 == 0 | sh22 == 1) |> #6093 left 
   select(sh22, hv105, hv024, hv025, hv122, hv219, hv112, hv009, hv270)
 
 #rename variables
-library(dplyr)
 hpv_girl_10_14 <- hpv_girl_10_14 |> rename(hpv_vaccine = sh22, 
        age = hv105,
        region = hv024,
@@ -104,9 +110,6 @@ label(hpv_girl_10_14$wealth_index) <- "Wealth Index"
 ```
 
 ```{r Introduction}
-#ggplot 
-library(ggplot2)
-library(ggridges)
 #Figure 1
 hpv_girl_10_14 |> 
   ggplot(aes(as.numeric(wealth_index), region_cat)) + 
@@ -127,12 +130,9 @@ figure2 |> ggplot(aes(x = age, y = count, fill = hpv_vaccine)) +
 
 ```{r Analysis - Regression}
 #Table 1 - Baseline characteristics 
-library(boot)
-library(table1)
 table1(~ age + region_cat + residence + education_cat + household_head_sex + household_member_number_cat + live_with_mother_in_household_cat + wealth_index | hpv_vaccine, data=hpv_girl_10_14, overall = "Total")
 
 #Figure 3 - Correlation matrix 
-library(ggcorrplot)
 model.matrix(~0+., data=correlation) |> cor(use = "pairwise.complete.obs") |> ggcorrplot(show.diag = F, type = "lower", lab = TRUE, lab_size = 2) + ggtitle("Figure 3. Correlation Matrix of Selected Continuous Variable")
 
 #logistic regression 
@@ -146,7 +146,6 @@ summary(model_logistic_2)
 
 ```{r Analysis - ML}
 #turn into a ML dataset 
-library(caret)
 set.seed(2604)
 hpv_girl_10_14 <- hpv_girl_10_14[complete.cases(hpv_girl_10_14),]
 y <- hpv_girl_10_14$hpv_vaccine
