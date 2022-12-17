@@ -360,30 +360,11 @@ Table 5. Model Accuracy Using Different Cutoff Values
     ## 10    0.9 0.7801477
     ## 11    1.0 0.7801477
 
-Table 6. Model Performance
+Table 6. Detailed Model Performances
 
-    ##  Accuracy 
-    ## 0.7806081
-
-    ## [1] 1
-
-    ## [1] 0
-
-    ##          actual
-    ## predicted  No Yes
-    ##        No 950 267
-
-    ##  Accuracy 
-    ## 0.7600657
-
-    ## [1] 0.9526316
-
-    ## [1] 0.07490637
-
-    ##          actual
-    ## predicted  No Yes
-    ##       No  905 247
-    ##       Yes  45  20
+    ##   cutoff_df accuracy_df sensitivity_df specificity_df
+    ## 1       0.3   0.7600657      0.9526316     0.07490637
+    ## 2       0.4   0.7806081      1.0000000     0.00000000
 
 All Code for this project:
 
@@ -533,6 +514,11 @@ confusionMatrix(y_hat_glm_2, test_set$hpv_vaccine)$overall["Accuracy"]
 sensitivity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 specificity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 table(predicted = y_hat_glm_2, actual = test_set$hpv_vaccine)
+cutoff_df <- c(0.3, 0.4)
+accuracy_df <- c(0.7600657, 0.7806081)
+sensitivity_df <-c(0.9526316, 1)
+specificity_df <-c(0.07490637, 0)
+print(data.frame(cutoff_df, accuracy_df, sensitivity_df,specificity_df))
 library(tidyverse)
 hpv_girl_10_14 <- hpv |> 
   filter(hv105 >= 10 & hv105 <=14 & hv104 ==2) |> #6528 left
@@ -691,4 +677,10 @@ confusionMatrix(y_hat_glm_2, test_set$hpv_vaccine)$overall["Accuracy"]
 sensitivity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 specificity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 table(predicted = y_hat_glm_2, actual = test_set$hpv_vaccine)
+
+cutoff_df <- c(0.3, 0.4)
+accuracy_df <- c(0.7600657, 0.7806081)
+sensitivity_df <-c(0.9526316, 1)
+specificity_df <-c(0.07490637, 0)
+print(data.frame(cutoff_df, accuracy_df, sensitivity_df,specificity_df))
 ```
