@@ -1,5 +1,5 @@
 ---
-title: "BST260 Final Project: Factors Assoociatd with HPV Vaccine Uptake in Young Girls in Uganda and a Prediction Algorithm"
+title: "BST260 Final Project: Factors Associated with HPV Vaccine Uptake in Young Girls in Uganda and a Prediction Algorithm"
 output: pdf_document
 author: "Qi Guo"
 date: "2022-12-16"

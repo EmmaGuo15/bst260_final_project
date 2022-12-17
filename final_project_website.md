@@ -1,4 +1,4 @@
-BST260 Final Project: Factors Assoociated with HPV Vaccine Uptake in
+BST260 Final Project: Factors Associated with HPV Vaccine Uptake in
 Young Girls in Uganda and a Prediction Algorithm
 ================
 Qi Guo
