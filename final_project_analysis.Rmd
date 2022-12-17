@@ -1,0 +1,197 @@
+---
+title: "Final Project Analysis"
+output: pdf_document
+date: "2022-12-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Final Project Analysis
+```{r Dataset & Codebook}
+#Import data from Stata
+library(haven)
+hpv <- read_dta("UGPR7BFL.DTA")
+
+#Codebook
+table(hpv$sh22) #hpv vaccine 
+table(hpv$hv105) #age
+table(hpv$hv104) #sex - female:2 
+table(hpv$hv024) #region
+table(hpv$hv025) #residence
+table(hpv$hv122) #education
+table(hpv$hv219) #sex of household head
+table(hpv$hv112) #living with mother in the household
+table(hpv$hv009) #number of household members 
+table(hpv$hv270) #wealth index factor
+```
+
+```{r Data Cleaning}
+#subset data to contain only girls aged 10-14, with availiable HPV vaccine status
+library(tidyverse)
+hpv_girl_10_14 <- hpv |> 
+  filter(hv105 >= 10 & hv105 <=14 & hv104 ==2) |> #6528 left
+  filter(sh22 == 0 | sh22 == 1) |> #6093 left 
+  select(sh22, hv105, hv024, hv025, hv122, hv219, hv112, hv009, hv270)
+
+#rename variables
+library(dplyr)
+hpv_girl_10_14 <- hpv_girl_10_14 |> rename(hpv_vaccine = sh22, 
+       age = hv105,
+       region = hv024,
+       residence = hv025,
+       education = hv122,
+       household_head_sex = hv219,
+       live_with_mother_in_household = hv112,
+       household_member_number = hv009,
+       wealth_index = hv270)
+
+correlation <- hpv_girl_10_14 |> select(age, education, household_member_number, wealth_index)
+label(correlation$age) <- "Age"
+label(correlation$education) <- "Education"
+label(correlation$household_member_number) <- "Number of Household Member"
+label(correlation$wealth_index) <- "Wealth Index"
+
+#recode 
+#hpv vaccine
+hpv_girl_10_14$hpv_vaccine <- factor(hpv_girl_10_14$hpv_vaccine, levels = c(0,1), labels = c("No", "Yes"))
+label(hpv_girl_10_14$hpv_vaccine) <- "HPV Vaccine"
+#age
+hpv_girl_10_14$age <- as.numeric(hpv_girl_10_14$age)
+label(hpv_girl_10_14$age) <- "Age"
+#region
+hpv_girl_10_14 <- hpv_girl_10_14 |> mutate(region_cat = case_when(
+  region == 0 ~ "Kampala",
+  region %in% c(7, 8, 9, 10) ~ "Northern",
+  region %in% c(3, 4, 5, 6) ~ "Eastern",
+  region %in% c(11, 12, 13, 14) ~ "Western",
+  region %in% c(1, 2) ~ "Central"
+))
+hpv_girl_10_14$region_cat <- as.factor(hpv_girl_10_14$region_cat)
+label(hpv_girl_10_14$region_cat) <- "Region"
+#residence
+hpv_girl_10_14$residence <- factor(hpv_girl_10_14$residence, levels = c(1,2), labels = c("Urban","Rural"))
+label(hpv_girl_10_14$residence) <- "Residence"
+#education
+hpv_girl_10_14 <- hpv_girl_10_14 |> filter(education %in% c(0,1,2,3))
+hpv_girl_10_14$education_cat <- factor(hpv_girl_10_14$education, levels = c(0,1,2,3), labels = c("No school", "Primary", "Secondary", "Higher"))
+label(hpv_girl_10_14$education_cat) <- "Education"
+#household sex
+hpv_girl_10_14$household_head_sex <- factor(hpv_girl_10_14$household_head_sex, levels = c(1,2), labels = c("Male", "Female"))
+label(hpv_girl_10_14$household_head_sex) <- "Sex of Household Head"
+#living with mother 
+hpv_girl_10_14 <- hpv_girl_10_14 |> mutate(live_with_mother_in_household_cat = case_when(
+  live_with_mother_in_household > 0 ~ "Yes",
+  live_with_mother_in_household == 0 ~ "No"
+))
+hpv_girl_10_14$live_with_mother_in_household_cat <- as.factor(hpv_girl_10_14$live_with_mother_in_household_cat)
+label(hpv_girl_10_14$live_with_mother_in_household_cat) <- "Mother in the Household"
+#household member number 
+hpv_girl_10_14$household_member_number <- as.numeric(hpv_girl_10_14$household_member_number)
+quantile(hpv_girl_10_14$household_member_number, probs = c(0,0.25,0.5,0.75,1))
+hpv_girl_10_14 <- hpv_girl_10_14 |> mutate(household_member_number_cat = case_when(
+  household_member_number <= 5 ~ 1,
+  household_member_number %in% c(6, 7) ~ 2,
+  household_member_number %in% c(8, 9) ~ 3,
+  household_member_number > 9 ~ 4
+))
+hpv_girl_10_14$household_member_number_cat <- factor(hpv_girl_10_14$household_member_number_cat, levels = c(1,2,3,4), labels = c("<=5","6-7","8-9", ">9"))
+label(hpv_girl_10_14$household_member_number_cat) <- "Number of Household Members"
+#Wealth Index
+hpv_girl_10_14$wealth_index <- factor(hpv_girl_10_14$wealth_index, levels = c(1,2,3,4,5), labels = c("Lowest", "Second", "Middle", "Fourth", "Highest"))
+label(hpv_girl_10_14$wealth_index) <- "Wealth Index"
+```
+
+```{r Introduction}
+#ggplot 
+library(ggplot2)
+library(ggridges)
+#Figure 1
+hpv_girl_10_14 |> 
+  ggplot(aes(as.numeric(wealth_index), region_cat)) + 
+  geom_density_ridges(bandwidth = 1.5) + 
+  xlab("Wealth Index") +
+  ylab("Region") + 
+  ggtitle("Figure 1. Distribution of Wealth Index across Regions")
+#Figure 2
+figure2 <- hpv_girl_10_14 |> group_by(age, region_cat, hpv_vaccine) |> summarize(count=n()) |> as.data.frame()
+figure2 |> ggplot(aes(x = age, y = count, fill = hpv_vaccine)) + 
+  geom_bar(position = "stack", stat = "identity") + 
+  facet_grid(. ~ region_cat) + 
+  scale_fill_discrete(name = "HPV Vaccine", labels = c("No", "Yes")) + 
+  xlab("Age") + 
+  ylab("Count") + 
+  ggtitle("Figure 2. Proportions of HPV Vaccine Uptakes by Age and Regions")
+```
+
+```{r Analysis - Regression}
+#Table 1 - Baseline characteristics 
+library(boot)
+library(table1)
+table1(~ age + region_cat + residence + education_cat + household_head_sex + household_member_number_cat + live_with_mother_in_household_cat + wealth_index | hpv_vaccine, data=hpv_girl_10_14, overall = "Total")
+
+#Figure 3 - Correlation matrix 
+library(ggcorrplot)
+model.matrix(~0+., data=correlation) |> cor(use = "pairwise.complete.obs") |> ggcorrplot(show.diag = F, type = "lower", lab = TRUE, lab_size = 2) + ggtitle("Figure 3. Correlation Matrix of Selected Continuous Variable")
+
+#logistic regression 
+#Table 2 - regression results full model 
+model_logistic <- glm(hpv_vaccine ~ age + region_cat + residence + education_cat + household_member_number_cat + household_head_sex + wealth_index + live_with_mother_in_household_cat, family = "binomial", data = hpv_girl_10_14)
+summary(model_logistic)
+#Table 3 - regression results simplified model 
+model_logistic_2 <- glm(hpv_vaccine ~ age + region_cat + education_cat + wealth_index + live_with_mother_in_household_cat, family = "binomial", data = hpv_girl_10_14)
+summary(model_logistic_2)
+```
+
+```{r Analysis - ML}
+#turn into a ML dataset 
+library(caret)
+set.seed(2604)
+hpv_girl_10_14 <- hpv_girl_10_14[complete.cases(hpv_girl_10_14),]
+y <- hpv_girl_10_14$hpv_vaccine
+test_index <- createDataPartition(y, times = 1, p = 0.8, list = FALSE)
+train_set <- hpv_girl_10_14 |> slice(test_index)
+test_set <- hpv_girl_10_14 |> slice(-test_index)
+
+#fit logistic regression
+fit_glm <- glm(hpv_vaccine ~ age + region_cat + residence + education_cat + live_with_mother_in_household_cat + household_member_number_cat + wealth_index, data = train_set, family = "binomial")
+p_hat_glm <- predict(fit_glm, test_set, type = "response")
+
+#Evaluation Matrix
+cutoff <- seq(0, 1, 0.1)
+accuracy <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(p_hat_glm > x, "Yes", "No") |> 
+    factor(levels = levels(test_set$hpv_vaccine))
+  mean(y_hat == train_set$hpv_vaccine)
+})
+
+#Figure 4.
+data.frame(cutoff, accuracy) |> 
+  ggplot(aes(cutoff, accuracy)) + 
+  geom_point() + 
+  geom_line() +
+  xlab("Cutoff") +
+  ylab("Accuracy") +
+  ggtitle("Figure 4. Accuray of Predictive Model Using Different Cutoff Values")
+max(accuracy)
+best_cutoff <- cutoff[which.max(accuracy)]
+best_cutoff
+
+#Table 5. Model Accuracy of Different Cutoff Values
+print(data.frame(cutoff, accuracy))
+
+#Table 6. Model Performance 
+y_hat_glm <-factor(ifelse(p_hat_glm > 0.4, "Yes", "No"))
+confusionMatrix(y_hat_glm, test_set$hpv_vaccine)$overall["Accuracy"]
+sensitivity(data = y_hat_glm, reference = test_set$hpv_vaccine)
+specificity(data = y_hat_glm, reference = test_set$hpv_vaccine)
+table(predicted = y_hat_glm, actual = test_set$hpv_vaccine)
+
+y_hat_glm_2 <-factor(ifelse(p_hat_glm > 0.3, "Yes", "No"))
+confusionMatrix(y_hat_glm_2, test_set$hpv_vaccine)$overall["Accuracy"]
+sensitivity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
+specificity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
+table(predicted = y_hat_glm_2, actual = test_set$hpv_vaccine)
+```
+
