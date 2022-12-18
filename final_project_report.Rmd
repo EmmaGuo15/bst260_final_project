@@ -54,6 +54,7 @@ library(boot)
 library(table1)
 library(ggcorrplot)
 library(caret)
+library(gtsummary)
 
 hpv_girl_10_14 <- hpv |> 
   filter(hv105 >= 10 & hv105 <=14 & hv104 ==2) |> #6528 left
@@ -144,6 +145,7 @@ figure2 |> ggplot(aes(x = age, y = count, fill = hpv_vaccine)) +
   ylab("Count") + 
   ggtitle("Figure 2. Proportions of HPV Vaccine Uptakes by Age and Regions")
 ```
+\newpage
 Table 1. Baseline characteristics 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #Table 1 - Baseline characteristics 
@@ -154,19 +156,28 @@ table1(~ age + region_cat + residence + education_cat + household_head_sex + hou
 library(ggcorrplot)
 model.matrix(~0+., data=correlation) |> cor(use = "pairwise.complete.obs") |> ggcorrplot(show.diag = F, type = "lower", lab = TRUE, lab_size = 2) + ggtitle("Figure 3. Correlation Matrix")
 ```
-Table 2. Regression Results from the Full Model 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 #Table 2 - regression results full model 
 model_logistic <- glm(hpv_vaccine ~ age + region_cat + residence + education_cat + household_member_number_cat + household_head_sex + wealth_index + live_with_mother_in_household_cat, family = "binomial", data = hpv_girl_10_14)
 summary(model_logistic)
 ```
-Table 3. Regression Results from the simplified Model 
+\newpage
+Table 2. Regression Results from the Full Model 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+tbl_regression(model_logistic, exponentiate = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
 #Table 3 - regression results simplified model 
 model_logistic_2 <- glm(hpv_vaccine ~ age + region_cat + education_cat + wealth_index + live_with_mother_in_household_cat, family = "binomial", data = hpv_girl_10_14)
 summary(model_logistic_2)
 ```
-
+\newpage
+Table 3. Regression Results from the simplified Model 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tbl_regression(model_logistic_2, exponentiate = TRUE)
+```
+\newpage
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #turn into a ML dataset 
 set.seed(2604)
@@ -197,6 +208,7 @@ data.frame(cutoff, accuracy) |>
   ylab("Accuracy") +
   ggtitle("Figure 4. Accuray of Predictive Model Using Different Cutoff Values")
 ```
+\newpage
 Table 5. Model Accuracy Using Different Cutoff Values
 ```{r echo=FALSE}
 #Table 5. Model Accuracy Using Different Cutoff Values
@@ -217,6 +229,7 @@ sensitivity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 specificity(data = y_hat_glm_2, reference = test_set$hpv_vaccine)
 table(predicted = y_hat_glm_2, actual = test_set$hpv_vaccine)
 ```
+\newpage
 Table 6. Detailed Model Performances 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 cutoff_df <- c(0.3, 0.4)
@@ -226,6 +239,7 @@ specificity_df <-c(0.07490637, 0)
 print(data.frame(cutoff_df, accuracy_df, sensitivity_df,specificity_df))
 ```
 
+\newpage
 All Code for this project: 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 library(tidyverse)
